@@ -406,8 +406,8 @@ final class QuotaRingsView: NSView {
             if let time = ring.time, !ring.stale {
                 let angle = (from + span * min(1, max(0, time))) * .pi / 180
                 let line = CGMutablePath()
-                line.move(to: CGPoint(x: center.x + tick.0 * cos(angle), y: center.y + tick.0 * sin(angle)), transform: transform)
-                line.addLine(to: CGPoint(x: center.x + tick.1 * cos(angle), y: center.y + tick.1 * sin(angle)), transform: transform)
+                line.move(to: CGPoint(x: center.x + tick.0 * Darwin.cos(Double(angle)), y: center.y + tick.0 * Darwin.sin(Double(angle))), transform: transform)
+                line.addLine(to: CGPoint(x: center.x + tick.1 * Darwin.cos(Double(angle)), y: center.y + tick.1 * Darwin.sin(Double(angle))), transform: transform)
                 let mark = CAShapeLayer()
                 mark.path = line; mark.strokeColor = drawing.tick.cgColor; mark.lineWidth = 1.2 * k; mark.lineCap = .round
                 body.addSublayer(mark)
@@ -594,8 +594,8 @@ struct PriceClockGlyph: View {
         }
         let radians = (now - 90) * .pi / 180
         var hand = Path()
-        hand.move(to: CGPoint(x: centre.x + 2.4 * k * cos(radians), y: centre.y + 2.4 * k * sin(radians)))
-        hand.addLine(to: CGPoint(x: centre.x + 9.6 * k * cos(radians), y: centre.y + 9.6 * k * sin(radians)))
+        hand.move(to: CGPoint(x: centre.x + 2.4 * k * Darwin.cos(Double(radians)), y: centre.y + 2.4 * k * Darwin.sin(Double(radians))))
+        hand.addLine(to: CGPoint(x: centre.x + 9.6 * k * Darwin.cos(Double(radians)), y: centre.y + 9.6 * k * Darwin.sin(Double(radians))))
         context.stroke(hand, with: .color(peakNow ? PacerPalette.attention : PacerPalette.tick), style: StrokeStyle(lineWidth: 1.6 * k, lineCap: .round))
     }
 
@@ -614,8 +614,8 @@ struct PriceClockGlyph: View {
         }
         let radians = (now - 90) * .pi / 180
         var hand = Path()
-        hand.move(to: CGPoint(x: centre.x + 26 * k * cos(radians), y: centre.y + 26 * k * sin(radians)))
-        hand.addLine(to: CGPoint(x: centre.x + 51 * k * cos(radians), y: centre.y + 51 * k * sin(radians)))
+        hand.move(to: CGPoint(x: centre.x + 26 * k * Darwin.cos(Double(radians)), y: centre.y + 26 * k * Darwin.sin(Double(radians))))
+        hand.addLine(to: CGPoint(x: centre.x + 51 * k * Darwin.cos(Double(radians)), y: centre.y + 51 * k * Darwin.sin(Double(radians))))
         context.stroke(hand, with: .color((PacerPalette.light ? Color.white : Color.black).opacity(0.8)), style: StrokeStyle(lineWidth: 13 * k, lineCap: .round))
         context.stroke(hand, with: .color(PacerPalette.tick), style: StrokeStyle(lineWidth: 7 * k, lineCap: .round))
     }
