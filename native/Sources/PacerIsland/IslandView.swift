@@ -210,22 +210,10 @@ private struct IslandPanelSection: View {
         } else {
             TaskPagerView(model: model, actions: section.actions)
         }
-        ForEach(model.trackedRows) { row in
-            let item = TrackedTaskStore.Presentation(row, hideProjects: model.hideProjects, at: model.now)
-            HStack(spacing: 8) {
-                Image(systemName: "list.bullet.rectangle").foregroundStyle(PacerPalette.secondary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: item.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
-                    Text(verbatim: item.detail).font(.system(size: 11)).foregroundStyle(PacerPalette.secondary)
-                }
-                Spacer(minLength: 4)
-                if let thread = item.threadID, let url = URL(string: "codex://threads/" + thread.uuidString.lowercased()) {
-                    Link(destination: url) { Image(systemName: "arrow.up.forward") }
-                        .accessibilityLabel(L10n.text("tracked.open"))
-                }
-            }
-            .padding(.horizontal, IslandMetrics.rowInset).padding(.vertical, 4)
-        }
+        TrackedTaskRows(rows: model.trackedRows.map {
+            TrackedTaskStore.Presentation($0, hideProjects: model.hideProjects, at: model.now)
+        })
+        .padding(.horizontal, IslandMetrics.rowInset)
     }
 
     private var header: ExpandedPanelPresentation.Header {

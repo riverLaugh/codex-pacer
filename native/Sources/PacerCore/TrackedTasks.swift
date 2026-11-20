@@ -6,6 +6,11 @@ import Foundation
 package struct TrackedTaskStore: Sendable {
     package let directory: URL
     package let files: any PlatformFileSystem
+    package init(directory: URL, files: any PlatformFileSystem) {
+        self.directory = directory
+        self.files = files
+    }
+
     static let byteLimit = 16 * 1024
 
     private struct Registration: Codable {
