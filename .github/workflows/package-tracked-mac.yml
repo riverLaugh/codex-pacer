@@ -1,0 +1,42 @@
+name: Build local tracked-tasks app
+on:
+  push:
+    branches: [codex/package-macos-469b377]
+permissions:
+  contents: read
+jobs:
+  mac:
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: 469b377ee74278154b5bed7ffdf7f4f1cb1e56f0
+      - name: Build, verify and archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = arm64
+          app="$RUNNER_TEMP/Codex Pacer.app"
+          PACER_UNIVERSAL=1 bash scripts/native/build-island.sh "$app" | tee "$RUNNER_TEMP/build.log"
+          scratch="$(sed -n 's/^Build directory: //p' "$RUNNER_TEMP/build.log")"
+          test -d "$scratch/.build"
+          mv "$scratch/.build" "$scratch/saved-build"
+          "$app/Contents/MacOS/CodexPacerIsland" >"$RUNNER_TEMP/gui.log" 2>&1 &
+          gui=$!
+          sleep 8
+          if ! kill -0 "$gui"; then cat "$RUNNER_TEMP/gui.log"; exit 1; fi
+          kill "$gui"
+          python3 scripts/diagnostics/test-tracked-tasks.py "$app/Contents/MacOS/CodexPacerIsland"
+          codesign --verify --deep --strict "$app"
+          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/Codex-Pacer-469b377-universal.zip"
+          cd "$RUNNER_TEMP"
+          shasum -a 256 Codex-Pacer-469b377-universal.zip > SHA256SUMS.txt
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: codex-pacer-mac-469b377
+          path: |
+            ${{ runner.temp }}/Codex-Pacer-469b377-universal.zip
+            ${{ runner.temp }}/SHA256SUMS.txt
+          retention-days: 2
+          if-no-files-found: error

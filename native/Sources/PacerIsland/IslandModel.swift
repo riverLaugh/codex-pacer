@@ -1679,9 +1679,42 @@ final class IslandModel: ObservableObject {
         if demo { makeDemo() }
     }
 
+    @Published private(set) var trackedRows: [TrackedTaskStore.Row] = []
+    private var trackedRead: Task<Void, Never>?
+
+    func updateTrackedTask(_ row: TrackedTaskStore.Row, linkTo thread: UUID? = nil) {
+        let store = TrackedTaskStore(directory: MacFileSystem.trackedTaskDirectory, files: MacFileSystem())
+        Task {
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    if let thread { try store.link(row, to: thread) }
+                    else { try store.clearFinished(row) }
+                }.value
+            } catch {
+                showNavigationError(L10n.text("tracked.update_error"))
+            }
+            await trackedRead?.value
+            refreshTrackedTasks()
+        }
+    }
+
+    private func refreshTrackedTasks() {
+        guard !demo, !sleeping, !stopped, trackedRead == nil else { return }
+        let store = TrackedTaskStore(directory: MacFileSystem.trackedTaskDirectory, files: MacFileSystem())
+        trackedRead = Task { [weak self] in
+            let rows = await Task.detached(priority: .utility) { store.rows(at: Date()) }.value
+            guard let self else { return }
+            trackedRead = nil
+            guard !stopped, rows != trackedRows else { return }
+            trackedRows = rows
+            onLayoutChange?()
+        }
+    }
+
     func start() {
         let plan = lifecycle.start()
         guard !plan.actions.isEmpty else { return }
+        refreshTrackedTasks()
         syncCodexProgressSwitch()
         syncDeepSeekProgressSwitch()
         syncLocalHarnessProgress()
@@ -1749,6 +1782,7 @@ final class IslandModel: ObservableObject {
         closeWork?.cancel()
         guard expanded != value else { return }
         expanded = value
+        if value { refreshTrackedTasks() }
         applyRefreshCadence()
         if value, !demo, !sleeping, !stopped { refreshActivity(metricsOnly: true) }
         onLayoutChange?()
@@ -2706,6 +2740,7 @@ final class IslandModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + max(0, deadline.timeIntervalSinceNow) + 0.01, execute: work)
     }
     private func tick() {
+        refreshTrackedTasks()
         redrawClock()
         harnessMaintenance()
         performLifecycle(lifecycle.tick(.init(now: now, expanded: visiblyExpanded, codexConnected: streamStatuses["local"]?.connected == true,

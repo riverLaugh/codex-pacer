@@ -77,6 +77,7 @@ jobs:
           make build 2>&1 | tee "$RUNNER_TEMP/pacer-build.log"
           app="$(sed -n 's/^App: //p' "$RUNNER_TEMP/pacer-build.log")"
           python3 -u scripts/diagnostics/test-codex-progress.py --mac-reporter "$app/Contents/MacOS/CodexPacerIsland" --output "$RUNNER_TEMP/pacer-progress"
+          python3 scripts/diagnostics/test-tracked-tasks.py "$app/Contents/MacOS/CodexPacerIsland"
       - name: Upload test logs
         if: failure()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -164,6 +165,8 @@ jobs:
           }
       - name: Build Windows desktop
         run: ./scripts/windows/build-desktop.ps1 -Configuration Release -SkipEngine -SaveEngineProducts output/windows/engine-products-x64 *>&1 | Tee-Object "$env:RUNNER_TEMP/pacer-desktop-build.log"
+      - name: Smoke-test tracked tasks in the packaged engine
+        run: python scripts/diagnostics/test-tracked-tasks.py windows/Desktop/bin/Release/net10.0-windows/Engine/PacerEngine.exe
       - name: Upload the built desktop
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:

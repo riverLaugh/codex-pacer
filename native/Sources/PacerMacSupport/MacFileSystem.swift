@@ -2,7 +2,20 @@ import Darwin
 import Foundation
 import PacerCore
 
-public struct MacFileSystem: PlatformFileSystem {
+public struct MacFileSystem: TrackedTaskFiles {
+    package func publishNew(_ staged: URL, at destination: URL) -> Bool {
+        staged.withUnsafeFileSystemRepresentation { source in
+            destination.withUnsafeFileSystemRepresentation { target in
+                guard let source, let target else { return false }
+                return renamex_np(source, target, UInt32(RENAME_EXCL)) == 0
+            }
+        }
+    }
+
+    package static var trackedTaskDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("CodexPacerIsland/TrackedTasks", isDirectory: true)
+    }
     public init() {}
     public func metadata(_ url: URL, followingSymbolicLinks: Bool) -> PlatformFileMetadata? {
         var info = stat()

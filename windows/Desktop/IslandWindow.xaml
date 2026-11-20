@@ -150,6 +150,7 @@
         </Button>
        </Grid>
       </Border>
+      <StackPanel x:Name="TrackedWorkers" Margin="9,0" AutomationProperties.AutomationId="island.tracked_workers"/>
       <Grid x:Name="TaskPages" Margin="0,4,0,0" ClipToBounds="True" PreviewMouseWheel="OnTaskWheel" PreviewMouseLeftButtonDown="OnTaskPointerDown" PreviewMouseLeftButtonUp="OnTaskPointerUp"/>
       </StackPanel>
       <TextBlock x:Name="StatusLabel" Visibility="Collapsed" Foreground="{DynamicResource Island.Attention}" FontSize="11" TextWrapping="Wrap" Margin="9,6,9,0"/>

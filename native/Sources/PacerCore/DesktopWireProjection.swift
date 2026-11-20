@@ -533,7 +533,8 @@ struct DesktopWireProjection {
         }
     }
     private mutating func refreshRequests() {
-        requests = (tree["requests"]?.list ?? []).enumerated().compactMap { index, value in
+        let rows = tree["requests"]?.list ?? []
+        requests = rows.enumerated().compactMap { index, value -> DesktopRequestDescriptor? in
             if ["resolved", "completed", "cancelled"].contains(value["status"]?.text ?? "") { return nil }
             let request = value["request"] ?? value
             let method = (request["method"]?.text ?? request["type"]?.text ?? request["kind"]?.text ?? "")
@@ -542,7 +543,8 @@ struct DesktopWireProjection {
             if method.contains("requestuserinput") || method.contains("elicitation") { kind = .input }
             else if method.contains("requestapproval") || method.contains("approvalrequest") { kind = .approval }
             else { return nil }
-            let identifier = value["id"]?.text ?? value["requestId"]?.text ?? request["id"]?.text ?? request["requestId"]?.text ?? "index:\(index)"
+            let fallback = request["id"]?.text ?? request["requestId"]?.text
+            let identifier = value["id"]?.text ?? value["requestId"]?.text ?? fallback ?? "index:\(index)"
             let digest = SHA256.hash(data: Data(identifier.utf8)).map { String(format: "%02x", $0) }.joined()
             return DesktopRequestDescriptor(id: digest, kind: kind)
         }

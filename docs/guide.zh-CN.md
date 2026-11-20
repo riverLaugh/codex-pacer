@@ -87,6 +87,26 @@ SSH 主机上的 Codex 任务（以及 Windows 上 WSL 里的 Codex 任务）也
 
 在“远程”页打开“统计 Codex Dot 任务”后才会显示 Dot 的 Durable 任务。它默认关闭，因为检查这些任务会增加耗电；升级时，如果这台电脑上已有 Dot 任务上报过进度，会保持开启。Dot 分派到这台电脑的任务会标注 `Dot`，聊天关闭时也能看到。Windows 上需要使用 Microsoft Store 版 Codex Desktop 和它的默认配置。Codex 页的“任务进度圆环”开关控制百分比上报。打开圆环后请重启 Codex Desktop，Dot 任务才会开始上报。关闭圆环会立即停止上报，Pacer 仍会显示任务是正在运行还是已经结束。
 
+## 本机后台任务
+
+安装包含本功能的版本后，可以让本机的 agent 登记一个批处理。展开灵动岛即可看到已处理项数和失败数，聊天结束后仍会继续更新。为 Codex 添加一次 MCP，之后打开一个新会话。
+
+macOS
+
+```sh
+codex mcp add pacer_tasks -- "/Applications/Codex Pacer.app/Contents/MacOS/CodexPacerIsland" --tracked-tasks-mcp
+```
+
+Windows PowerShell
+
+```powershell
+codex mcp add pacer_tasks -- "$env:LOCALAPPDATA\Programs\Codex Pacer\Engine\PacerEngine.exe" --tracked-tasks-mcp
+```
+
+可以对 agent 说「启动 PDF 批处理，用 track_task 登记；让脚本每批写入实际成功数和失败数，结束时写最终状态」。用 untrack_task 和运行 ID 移除这条记录。关闭聊天、取消跟踪都不会终止作业。[状态文件格式](tracked-tasks-prd.zh-CN.md)
+
+在 Mac 的展开任务列表中，点会话名称可返回聊天。没有来源的任务可以点“关联会话”，从本机最近的 Codex 会话中选择。任务完成或失败后，点该行的“清除”即可移除 Pacer 记录，状态文件和聊天仍然保留。
+
 ## 额度与余额
 
 **Codex 和 Claude。** 每个服务一个圆环：上弧是 5 小时额度，下弧是每周额度，各自显示剩余百分比和重置倒计时。白色刻度表示还剩多少时间：弧线超过刻度，说明你用得比匀速慢。额度偏低或用得太快时，数值变成琥珀色。只开一个服务时，还会显示配速和到重置时的预计。

@@ -125,8 +125,8 @@ struct DeepSeekDialFace: View {
         }
         let radians = (now - 90) * .pi / 180
         var tick = Path()
-        tick.move(to: CGPoint(x: centre.x + (radius - 5 * k) * cos(radians), y: centre.y + (radius - 5 * k) * sin(radians)))
-        tick.addLine(to: CGPoint(x: centre.x + (radius + 5 * k) * cos(radians), y: centre.y + (radius + 5 * k) * sin(radians)))
+        tick.move(to: CGPoint(x: centre.x + (radius - 5 * k) * Darwin.cos(Double(radians)), y: centre.y + (radius - 5 * k) * Darwin.sin(Double(radians))))
+        tick.addLine(to: CGPoint(x: centre.x + (radius + 5 * k) * Darwin.cos(Double(radians)), y: centre.y + (radius + 5 * k) * Darwin.sin(Double(radians))))
         context.stroke(tick, with: .color(PacerPalette.tickEdge), style: StrokeStyle(lineWidth: max(1.2, 2.4 * k), lineCap: .round))
         context.stroke(tick, with: .color(PacerPalette.tick), style: StrokeStyle(lineWidth: max(1, 1.7 * k), lineCap: .round))
     }

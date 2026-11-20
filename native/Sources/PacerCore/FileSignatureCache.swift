@@ -9,7 +9,7 @@ final class FileSignatureCache<Value>: @unchecked Sendable {
 
     func value(for file: URL, compute: () -> Value) -> Value {
         let attributes = try? FileManager.default.attributesOfItem(atPath: file.path)
-        let signature = [(attributes?[.modificationDate] as? Date)?.timeIntervalSince1970 ?? -1,
+        let signature: [Double] = [(attributes?[.modificationDate] as? Date)?.timeIntervalSince1970 ?? -1,
                          (attributes?[.size] as? NSNumber)?.doubleValue ?? -1,
                          (attributes?[.systemFileNumber] as? NSNumber)?.doubleValue ?? -1]
         return value(for: file, signature: .attributes(signature), compute: compute)

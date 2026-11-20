@@ -196,17 +196,23 @@ private struct IslandPanelSection: View {
     @ViewBuilder private var tasks: some View {
         if model.visibleActivities.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                IslandSectionHeader(title: L10n.text("layout.group.tasks"), detail: "0") {
+                IslandSectionHeader(title: L10n.text("layout.group.tasks"), detail: String(model.trackedRows.count)) {
                     if section.actions { IslandPanelControls(model: model) }
                 }
-                HStack(spacing: 10) {
-                    StatusGlyph(symbol: StatusSymbols.idle, tint: PacerPalette.secondary)
-                    Text(L10n.text("activity.no_tasks")).font(.system(size: 12, weight: .medium)).foregroundStyle(PacerPalette.secondary)
+                if model.trackedRows.isEmpty {
+                    HStack(spacing: 10) {
+                        StatusGlyph(symbol: StatusSymbols.idle, tint: PacerPalette.secondary)
+                        Text(L10n.text("activity.no_tasks")).font(.system(size: 12, weight: .medium)).foregroundStyle(PacerPalette.secondary)
+                    }
+                    .padding(.horizontal, IslandMetrics.rowInset).padding(.vertical, 8)
                 }
-                .padding(.horizontal, IslandMetrics.rowInset).padding(.vertical, 8)
             }
         } else {
             TaskPagerView(model: model, actions: section.actions)
+        }
+        if !model.trackedRows.isEmpty {
+            TrackedTaskRows(model: model)
+                .padding(.horizontal, IslandMetrics.rowInset)
         }
     }
 

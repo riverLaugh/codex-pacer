@@ -4,6 +4,9 @@ import SQLite3
 /// Read-only lookup also finds sessions resumed from older date directories.
 public enum SessionIndex {
     public struct Entry: Sendable {
+        package var threadID: Foundation.UUID? {
+            CodexRolloutName.threadID(of: url).flatMap(Foundation.UUID.init(uuidString:))
+        }
         public let url: URL
         public let title: String?
         public let parentThreadID: String?

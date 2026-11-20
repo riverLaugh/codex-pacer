@@ -365,6 +365,7 @@ struct EngineSnapshot: Codable, Equatable {
     let connections: ConnectionPagePresentation?
     let navigationError: EngineNavigationFailure?
     let openingActivityIDs: [String]?
+    var trackedTasks: [TrackedTaskStore.Presentation]? = nil
     var expandedPanel: EngineExpandedPanel? = nil
     var accountCredits: [EngineAccountCredits]? = nil
     var wslAvailability: WindowsWSLAvailability?

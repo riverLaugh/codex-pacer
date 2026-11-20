@@ -22,7 +22,7 @@ struct TaskPagerView: View {
     }
 
     var header: some View {
-        IslandSectionHeader(title: L10n.text("layout.group.tasks", language: language), detail: model.taskPresentation.taskCountText) {
+        IslandSectionHeader(title: L10n.text("layout.group.tasks", language: language), detail: String(tasks.count + model.trackedRows.count)) {
             if pagination.isPaginated {
                 HStack(spacing: 2) {
                     pageButton(delta: -1, symbol: "chevron.left", title: L10n.text("activity.previous_page"))
@@ -39,7 +39,7 @@ struct TaskPagerView: View {
             if actions { IslandPanelControls(model: model, language: language) }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(L10n.text(tasks.count == 1 ? "activity.task_count_singular" : "activity.task_count", tasks.count))
+        .accessibilityLabel(L10n.text(tasks.count + model.trackedRows.count == 1 ? "activity.task_count_singular" : "activity.task_count", tasks.count + model.trackedRows.count))
     }
 
     var body: some View {

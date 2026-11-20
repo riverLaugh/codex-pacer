@@ -806,7 +806,8 @@ public partial class IslandWindow : Window
         bool rowsChanged = !rows.SequenceEqual(presentation.Rows);
         if (rowsChanged || choicesChanged) { rows = presentation.Rows; page = Math.Clamp(page, 0, PageCount - 1); }
         string countShown = TasksCount.Text, pageShown = PageNumber.Text; var pagerShown = PageControls.Visibility;
-        TasksCount.Text = presentation.TaskCountText ?? "—";
+        TasksCount.Text = snapshot.TrackedTasks is { Count: > 0 } workers
+            ? (presentation.Rows.Count + workers.Count).ToString() : presentation.TaskCountText ?? "—";
         UpdatePager();
         // A new count or page label can widen the task header.
         bool panelChanged = first || countShown != TasksCount.Text || pageShown != PageNumber.Text || pagerShown != PageControls.Visibility;
