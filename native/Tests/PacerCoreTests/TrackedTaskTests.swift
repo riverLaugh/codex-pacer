@@ -71,6 +71,44 @@ final class TrackedTaskTests: XCTestCase {
         XCTAssertEqual(hidden.threadID, thread)
     }
 
+    func testManuallyLinkThenClearOneFinishedRun() throws {
+        let other = UUID(), thread = UUID()
+        try register(); try register(other)
+        func row() throws -> TrackedTaskStore.Row {
+            try XCTUnwrap(store.rows(at: Date()).first { $0.id == id })
+        }
+        XCTAssertFalse(try row().canClear)
+        try store.link(try row(), to: thread)
+        XCTAssertEqual(try row().threadID, thread)
+        try write()
+        XCTAssertThrowsError(try store.clearFinished(try row()))
+        for ending in ["completed", "failed"] {
+            try write(ending, 1, 0, 1)
+            XCTAssertTrue(try row().canClear)
+            try store.clearFinished(try row())
+            XCTAssertEqual(store.rows(at: Date()).map(\.id), [other])
+            XCTAssertTrue(FileManager.default.fileExists(atPath: file.path))
+            if ending == "completed" {
+                try register()
+                XCTAssertNil(try row().threadID)
+            }
+        }
+        XCTAssertFalse(try FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("registry").path)
+            .contains { $0.hasSuffix(".thread") })
+    }
+
+    func testTrustedOriginAndNewRegistrationAreProtectedFromStaleActions() throws {
+        try register()
+        let old = try XCTUnwrap(store.rows(at: Date()).first)
+        try store.forget(id: id)
+        let thread = UUID()
+        try store.register(id: id, title: "Next run", path: file.path, threadID: thread)
+        XCTAssertThrowsError(try store.link(old, to: UUID()))
+        let fresh = try XCTUnwrap(store.rows(at: Date()).first)
+        XCTAssertThrowsError(try store.link(fresh, to: UUID()))
+        XCTAssertEqual(store.rows(at: Date()).first?.threadID, thread)
+    }
+
     func testTerminalOutcomesAndUntrackPreserveWorkerFile() throws {
         for (state, ok, failed, total) in [("completed", 0, 0, 0), ("completed", 1, 0, 1), ("failed", 1, 2, 10)] {
             let run = UUID()

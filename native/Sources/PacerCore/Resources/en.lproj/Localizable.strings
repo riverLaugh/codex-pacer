@@ -1616,3 +1616,9 @@
 "tracked.unavailable" = "Status unavailable";
 "tracked.age" = "Updated %d min ago";
 "tracked.open" = "Open original conversation";
+"tracked.link" = "Link conversation";
+"tracked.clear" = "Clear";
+"tracked.clear_help" = "Remove this finished task from Pacer";
+"tracked.session_id" = "Conversation %@";
+"tracked.no_sessions" = "No recent local Codex conversations";
+"tracked.update_error" = "Could not update this tracked task.";

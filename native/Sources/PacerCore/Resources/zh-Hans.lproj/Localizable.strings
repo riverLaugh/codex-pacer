@@ -1616,3 +1616,9 @@
 "tracked.unavailable" = "状态文件暂不可用";
 "tracked.age" = "%d 分钟前更新";
 "tracked.open" = "打开发起任务的会话";
+"tracked.link" = "关联会话";
+"tracked.clear" = "清除";
+"tracked.clear_help" = "从 Pacer 列表移除这条已结束的任务";
+"tracked.session_id" = "会话 %@";
+"tracked.no_sessions" = "暂无最近的本机 Codex 会话";
+"tracked.update_error" = "未能更新这条跟踪任务。";

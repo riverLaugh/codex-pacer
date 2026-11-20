@@ -105,6 +105,8 @@ codex mcp add pacer_tasks -- "$env:LOCALAPPDATA\Programs\Codex Pacer\Engine\Pace
 
 Ask the agent to register the batch with track_task and have the worker publish its counts after each batch and its final state at exit. Use untrack_task with the run ID to remove the entry. The worker continues independently. [Worker JSON format](development.md#local-tracked-jobs)
 
+On Mac, click the conversation name on a tracked task to open it. Use **Link conversation** on an unlinked task to choose a recent local Codex chat. After the task completes or fails, **Clear** removes its Pacer record and preserves the status file and chat.
+
 ## Quota and balance
 
 **Codex and Claude.** Each service has one ring: the upper arc is the 5-hour quota and the lower arc the weekly quota, each with its percentage left and a reset countdown. A white tick marks how much of the time is left: if the arc reaches past the tick, you're ahead of an even pace. Values turn amber when they run low or fast. With only one service on, Pacer also shows its pace and a forecast for the reset.

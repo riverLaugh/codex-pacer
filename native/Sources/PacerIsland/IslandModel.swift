@@ -1682,6 +1682,22 @@ final class IslandModel: ObservableObject {
     @Published private(set) var trackedRows: [TrackedTaskStore.Row] = []
     private var trackedRead: Task<Void, Never>?
 
+    func updateTrackedTask(_ row: TrackedTaskStore.Row, linkTo thread: UUID? = nil) {
+        let store = TrackedTaskStore(directory: MacFileSystem.trackedTaskDirectory, files: MacFileSystem())
+        Task {
+            do {
+                try await Task.detached(priority: .userInitiated) {
+                    if let thread { try store.link(row, to: thread) }
+                    else { try store.clearFinished(row) }
+                }.value
+            } catch {
+                showNavigationError(L10n.text("tracked.update_error"))
+            }
+            await trackedRead?.value
+            refreshTrackedTasks()
+        }
+    }
+
     private func refreshTrackedTasks() {
         guard !demo, !sleeping, !stopped, trackedRead == nil else { return }
         let store = TrackedTaskStore(directory: MacFileSystem.trackedTaskDirectory, files: MacFileSystem())

@@ -45,11 +45,16 @@ package struct TrackedTaskStore: Sendable {
     }
     package struct Row: Equatable, Identifiable, Sendable {
         package let id: UUID
+        let generation: UUID
         package let title: String
         package let threadID: UUID?
         let reading: Reading?
         let created: Date
         let unavailable: Bool
+
+        package var canClear: Bool {
+            reading?.status.state == .completed || reading?.status.state == .failed
+        }
 
         package func detail(at now: Date) -> String {
             guard let reading else { return L10n.text("tracked.pending") }
@@ -109,13 +114,39 @@ package struct TrackedTaskStore: Sendable {
         }
     }
 
-    func forget(id: UUID) throws {
+    /// A user-selected link belongs only to this generation of an unlinked run.
+    package func link(_ row: Row, to thread: UUID) throws {
+        let entry = directory.appendingPathComponent(row.id.uuidString.lowercased() + ".json")
+        guard let record = read(Registration.self, from: entry),
+              record.generation == row.generation, record.threadID == nil else { throw Failure.conflict }
+        let destination = directory.appendingPathComponent(record.generation.uuidString + ".thread")
+        let temporary = directory.appendingPathComponent("." + UUID().uuidString)
+        guard files.replace(temporary, with: try JSONEncoder().encode(thread)) else { throw Failure.storage }
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        guard files.publishNew(temporary, at: destination) || read(UUID.self, from: destination) == thread else {
+            throw Failure.conflict
+        }
+        guard read(Registration.self, from: entry)?.generation == record.generation else {
+            try? FileManager.default.removeItem(at: destination)
+            throw Failure.conflict
+        }
+    }
+
+    package func clearFinished(_ row: Row) throws {
+        guard row.canClear else { throw Failure.conflict }
+        try forget(id: row.id, generation: row.generation)
+    }
+
+    func forget(id: UUID, generation: UUID? = nil) throws {
         let entry = directory.appendingPathComponent(id.uuidString.lowercased() + ".json")
         guard files.metadata(entry) != nil else { return }
         guard let record = read(Registration.self, from: entry) else { throw Failure.storage }
+        if let generation, generation != record.generation { throw Failure.conflict }
         do { try FileManager.default.removeItem(at: entry) }
         catch let error as CocoaError where error.code == .fileNoSuchFile { return }
         let cache = directory.appendingPathComponent(record.generation.uuidString + ".last")
+        let thread = directory.appendingPathComponent(record.generation.uuidString + ".thread")
+        try? FileManager.default.removeItem(at: thread)
         if files.metadata(cache) != nil { try? FileManager.default.removeItem(at: cache) }
     }
 
@@ -141,7 +172,8 @@ package struct TrackedTaskStore: Sendable {
                     reading = next
                 } else { unavailable = true }
             }
-            return Row(id: id, title: record.title, threadID: record.threadID, reading: reading,
+            let thread = record.threadID ?? read(UUID.self, from: directory.appendingPathComponent(record.generation.uuidString + ".thread"))
+            return Row(id: id, generation: record.generation, title: record.title, threadID: thread, reading: reading,
                        created: record.created, unavailable: unavailable)
         }.sorted { lhs, rhs in
             let active = lhs.reading?.status.state ?? .running

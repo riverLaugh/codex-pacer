@@ -210,10 +210,10 @@ private struct IslandPanelSection: View {
         } else {
             TaskPagerView(model: model, actions: section.actions)
         }
-        TrackedTaskRows(rows: model.trackedRows.map {
-            TrackedTaskStore.Presentation($0, hideProjects: model.hideProjects, at: model.now)
-        })
-        .padding(.horizontal, IslandMetrics.rowInset)
+        if !model.trackedRows.isEmpty {
+            TrackedTaskRows(model: model)
+                .padding(.horizontal, IslandMetrics.rowInset)
+        }
     }
 
     private var header: ExpandedPanelPresentation.Header {
