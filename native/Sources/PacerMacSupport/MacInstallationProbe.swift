@@ -20,9 +20,10 @@ extension ProviderInstallationDetection {
             return urls.prefix(12).contains { $0.pathExtension.lowercased() == "app" && Bundle(url: $0)?.bundleIdentifier == bundleID }
         }
         func cliInstalled(_ name: String) -> Bool {
-            let paths = [userHome.appendingPathComponent(".local/bin").path] + systemBinDirectories +
-                MacExecutablePlatform.managerBinDirectories(environment: environment, userHome: userHome) +
-                (environment["PATH"] ?? "").split(separator: ":").prefix(128).map(String.init).filter { $0.hasPrefix("/") }
+            var paths = [userHome.appendingPathComponent(".local/bin").path] + systemBinDirectories
+            paths += 
+                MacExecutablePlatform.managerBinDirectories(environment: environment, userHome: userHome)
+            paths += (environment["PATH"] ?? "").split(separator: ":").prefix(128).map(String.init).filter { $0.hasPrefix("/") }
             return paths.contains {
                 CodexExecutableResolver.isExecutableFile(URL(fileURLWithPath: $0).appendingPathComponent(name))
             }
