@@ -6,19 +6,17 @@ permissions:
   contents: read
 jobs:
   mac:
-    runs-on: macos-15-intel
-    timeout-minutes: 45
+    runs-on: macos-26
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
-          ref: d47a77ca0a92d94ee993d08dda1589988c042140
+          ref: 90246a56d7bb34651731e97b4eff3cd6019f41c1
       - name: Build, verify and archive
         shell: bash
         run: |
           set -euo pipefail
-          xcode="$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
-          test -d "$xcode/Contents/Developer"
-          export DEVELOPER_DIR="$xcode/Contents/Developer"
+          test "$(uname -m)" = arm64
           app="$RUNNER_TEMP/Codex Pacer.app"
           PACER_UNIVERSAL=1 bash scripts/native/build-island.sh "$app" | tee "$RUNNER_TEMP/build.log"
           scratch="$(sed -n 's/^Build directory: //p' "$RUNNER_TEMP/build.log")"
@@ -31,14 +29,14 @@ jobs:
           kill "$gui"
           python3 scripts/diagnostics/test-tracked-tasks.py "$app/Contents/MacOS/CodexPacerIsland"
           codesign --verify --deep --strict "$app"
-          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/Codex-Pacer-d47a77c-universal.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$app" "$RUNNER_TEMP/Codex-Pacer-90246a5-universal.zip"
           cd "$RUNNER_TEMP"
-          shasum -a 256 Codex-Pacer-d47a77c-universal.zip > SHA256SUMS.txt
+          shasum -a 256 Codex-Pacer-90246a5-universal.zip > SHA256SUMS.txt
       - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
-          name: codex-pacer-mac-d47a77c
+          name: codex-pacer-mac-90246a5
           path: |
-            ${{ runner.temp }}/Codex-Pacer-d47a77c-universal.zip
+            ${{ runner.temp }}/Codex-Pacer-90246a5-universal.zip
             ${{ runner.temp }}/SHA256SUMS.txt
           retention-days: 2
           if-no-files-found: error
