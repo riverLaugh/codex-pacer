@@ -49,7 +49,11 @@ extension DeepSeekAPIKeyStore {
     @discardableResult public static func remove() -> Bool { WindowsCredentialStore().removeChecked() }
 }
 
-public struct WindowsFileSystem: PlatformFileSystem {
+public struct WindowsFileSystem: TrackedTaskFiles {
+    package func publishNew(_ staged: URL, at destination: URL) -> Bool {
+        pacer_publish_new_file(WindowsFiles.wide(staged), WindowsFiles.wide(destination)) != 0
+    }
+
     static var trackedTaskDirectory: URL {
         let local = ProcessInfo.processInfo.environment["LOCALAPPDATA"].map { URL(fileURLWithPath: $0) }
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("AppData/Local")

@@ -1,12 +1,17 @@
 import Foundation
 
+package protocol TrackedTaskFiles: PlatformFileSystem {
+    /// Atomically install a staged file without replacing an existing registration.
+    func publishNew(_ staged: URL, at destination: URL) -> Bool
+}
+
 /// A worker owns the status file. The MCP server owns the registration and
 /// the desktop reader checkpoints validated counts so a disappearing file or
 /// a restarted app does not erase the last observation.
 package struct TrackedTaskStore: Sendable {
     package let directory: URL
-    package let files: any PlatformFileSystem
-    package init(directory: URL, files: any PlatformFileSystem) {
+    package let files: any TrackedTaskFiles
+    package init(directory: URL, files: any TrackedTaskFiles) {
         self.directory = directory
         self.files = files
     }
@@ -98,8 +103,7 @@ package struct TrackedTaskStore: Sendable {
         let temporary = directory.appendingPathComponent("." + UUID().uuidString)
         guard files.replace(temporary, with: try JSONEncoder().encode(record)) else { throw Failure.storage }
         defer { try? FileManager.default.removeItem(at: temporary) }
-        do { try FileManager.default.linkItem(at: temporary, to: destination) }
-        catch {
+        if !files.publishNew(temporary, at: destination) {
             guard let previous = read(Registration.self, from: destination) else { throw Failure.storage }
             guard previous.path == path && previous.title == title else { throw Failure.conflict }
         }

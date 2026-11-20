@@ -47,7 +47,7 @@ package enum TrackedTaskCommand {
         } catch { return result("Could not update Pacer's local task registry.", error: true) }
     }
 
-    package static func serveIfRequested(arguments: [String], directory: URL, files: any PlatformFileSystem,
+    package static func serveIfRequested(arguments: [String], directory: URL, files: any TrackedTaskFiles,
                                          read: () throws -> Data?) -> Bool {
         guard let command = arguments.dropFirst().first,
               ["--tracked-tasks-mcp", "--tracked-tasks-snapshot"].contains(command) else { return false }

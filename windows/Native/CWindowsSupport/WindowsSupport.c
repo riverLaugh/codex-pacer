@@ -22,6 +22,9 @@ int pacer_sha256(const uint8_t *bytes, size_t count, uint8_t output[32]) {
     BCryptCloseAlgorithmProvider(algorithm, 0);
     return status >= 0;
 }
+int pacer_publish_new_file(const uint16_t *source, const uint16_t *destination) {
+    return MoveFileExW((LPCWSTR)source, (LPCWSTR)destination, MOVEFILE_WRITE_THROUGH) != 0;
+}
 int pacer_replace_file(const uint16_t *source, const uint16_t *destination) {
     return MoveFileExW((LPCWSTR)source, (LPCWSTR)destination, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
 }
@@ -167,6 +170,7 @@ int pacer_codex_package_path(size_t index, uint16_t *path, size_t capacity) {
 #else
 // This target is only a dependency on Windows.
 int pacer_sha256(const uint8_t *bytes, size_t count, uint8_t output[32]) { return 0; }
+int pacer_publish_new_file(const uint16_t *source, const uint16_t *destination) { return 0; }
 int pacer_replace_file(const uint16_t *source, const uint16_t *destination) { return 0; }
 int pacer_read_credential(const uint16_t *name, uint8_t *bytes, size_t capacity) { return -1; }
 int pacer_write_credential(const uint16_t *name, const uint8_t *bytes, size_t count) { return 0; }

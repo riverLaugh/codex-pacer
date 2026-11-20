@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 int pacer_sha256(const uint8_t *bytes, size_t count, uint8_t output[32]);
+int pacer_publish_new_file(const uint16_t *source, const uint16_t *destination);
 int pacer_replace_file(const uint16_t *source, const uint16_t *destination);
 typedef struct {
     uint64_t volume, file_low, file_high, size, modified, created;
