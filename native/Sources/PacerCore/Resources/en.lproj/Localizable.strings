@@ -1607,3 +1607,12 @@
 "whats_new.return_top_center_detail" = "If you often move the island, add a button to the panel's header that puts it back at the top center.";
 "whats_new.claude_app_access" = "Reminders for Claude's app access requests";
 "whats_new.claude_app_access_detail" = "When Claude Desktop asks to use an app on your computer, Pacer shows that the task is waiting for you.";
+
+"tracked.pending" = "Waiting for first update";
+"tracked.running" = "Running";
+"tracked.completed" = "Completed";
+"tracked.failed" = "Failed";
+"tracked.failures" = "%d failed";
+"tracked.unavailable" = "Status unavailable";
+"tracked.age" = "Updated %d min ago";
+"tracked.open" = "Open original conversation";

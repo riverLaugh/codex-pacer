@@ -196,17 +196,35 @@ private struct IslandPanelSection: View {
     @ViewBuilder private var tasks: some View {
         if model.visibleActivities.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                IslandSectionHeader(title: L10n.text("layout.group.tasks"), detail: "0") {
+                IslandSectionHeader(title: L10n.text("layout.group.tasks"), detail: String(model.trackedRows.count)) {
                     if section.actions { IslandPanelControls(model: model) }
                 }
-                HStack(spacing: 10) {
-                    StatusGlyph(symbol: StatusSymbols.idle, tint: PacerPalette.secondary)
-                    Text(L10n.text("activity.no_tasks")).font(.system(size: 12, weight: .medium)).foregroundStyle(PacerPalette.secondary)
+                if model.trackedRows.isEmpty {
+                    HStack(spacing: 10) {
+                        StatusGlyph(symbol: StatusSymbols.idle, tint: PacerPalette.secondary)
+                        Text(L10n.text("activity.no_tasks")).font(.system(size: 12, weight: .medium)).foregroundStyle(PacerPalette.secondary)
+                    }
+                    .padding(.horizontal, IslandMetrics.rowInset).padding(.vertical, 8)
                 }
-                .padding(.horizontal, IslandMetrics.rowInset).padding(.vertical, 8)
             }
         } else {
             TaskPagerView(model: model, actions: section.actions)
+        }
+        ForEach(model.trackedRows) { row in
+            let item = TrackedTaskStore.Presentation(row, hideProjects: model.hideProjects, at: model.now)
+            HStack(spacing: 8) {
+                Image(systemName: "list.bullet.rectangle").foregroundStyle(PacerPalette.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: item.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                    Text(verbatim: item.detail).font(.system(size: 11)).foregroundStyle(PacerPalette.secondary)
+                }
+                Spacer(minLength: 4)
+                if let thread = item.threadID, let url = URL(string: "codex://threads/" + thread.uuidString.lowercased()) {
+                    Link(destination: url) { Image(systemName: "arrow.up.forward") }
+                        .accessibilityLabel(L10n.text("tracked.open"))
+                }
+            }
+            .padding(.horizontal, IslandMetrics.rowInset).padding(.vertical, 4)
         }
     }
 

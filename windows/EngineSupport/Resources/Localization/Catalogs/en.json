@@ -2,7 +2,7 @@
   "language": "en",
   "schemaVersion": 1,
   "sources": {
-    "native/Sources/PacerCore/Resources/en.lproj/Localizable.strings": "4e59c824db5de9ddc0367ea4f23a9be2ed8265785a159f8a965d6c352c7d95b1",
+    "native/Sources/PacerCore/Resources/en.lproj/Localizable.strings": "e217dcccc7ebf7130e52247b9db1bdd69be48710c4c90c3b672d8173cee0cd01",
     "windows/EngineSupport/Resources/Localization/en.json": "0b0b4dcd7ebc33b80bd38ad541af2e86d831515198f05708c8878108a62e3cca"
   },
   "strings": {
@@ -1408,6 +1408,14 @@
     "support.star.title": "Give Pacer a star",
     "support.thanks.detail": "Pacer is free and open source. If it helps your day, here are a few small ways to help it back.",
     "support.thanks.title": "Thanks for using Codex Pacer",
+    "tracked.age": "Updated %d min ago",
+    "tracked.completed": "Completed",
+    "tracked.failed": "Failed",
+    "tracked.failures": "%d failed",
+    "tracked.open": "Open original conversation",
+    "tracked.pending": "Waiting for first update",
+    "tracked.running": "Running",
+    "tracked.unavailable": "Status unavailable",
     "update.failure.banner_check": "Couldn\u2019t check for updates",
     "update.failure.banner_check_detail": "This network may not reach GitHub. You can get new versions another way.",
     "update.failure.banner_download_detail": "Couldn\u2019t download it from GitHub. You can get it another way.",

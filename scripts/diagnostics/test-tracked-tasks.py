@@ -35,6 +35,12 @@ def check(executable):
         assert not rpc("tools/call", call)["isError"]
         assert not rpc("tools/call", call)["isError"]
         assert rows()[0]["state"] == "pending"
+        conflict = dict(args, status_file=str(root / "other.json"))
+        assert rpc("tools/call", {"name": "track_task", "arguments": conflict})["isError"]
+        second = dict(args, run_id=str(uuid.uuid4()), title="A second run")
+        assert not rpc("tools/call", {"name": "track_task", "arguments": second})["isError"]
+        assert len(rows()) == 2
+        assert not rpc("tools/call", {"name": "untrack_task", "arguments": {"run_id": second["run_id"]}})["isError"]
         # The registrar has exited. The worker alone publishes the observations.
         for state, succeeded in [("running", 340), ("completed", 998)]:
             shadow = source.with_suffix(".tmp")
@@ -46,8 +52,19 @@ def check(executable):
             assert row["hasOrigin"]
             source.unlink()
             assert rows()[0]["succeeded"] == succeeded
+            if state == "running":
+                for invalid in ["{", "null", "x" * 17000,
+                                json.dumps(dict(run_id=second["run_id"], state="completed", succeeded=1, failed=0, total=1)),
+                                json.dumps(dict(run_id=run, state="running", succeeded=-1, failed=2, total=10))]:
+                    source.write_text(invalid, encoding="utf-8")
+                    cached = rows()[0]
+                    assert cached["unavailable"] and cached["succeeded"] == 340
+            else:
+                source.write_text(json.dumps(dict(run_id=run, state="running", succeeded=0, failed=0, total=1000)))
+                assert rows()[0]["state"] == "completed"
         assert not rpc("tools/call", {"name": "untrack_task", "arguments": {"run_id": run}})["isError"]
-        assert rows() == []
+        assert rows() == [] and source.exists()
+        assert not rpc("tools/call", {"name": "untrack_task", "arguments": {"run_id": run}})["isError"]
 
 
 if __name__ == "__main__":

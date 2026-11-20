@@ -87,6 +87,24 @@ Codex tasks on SSH hosts, and in WSL on Windows, report too: Pacer sets reportin
 
 Turn on **Include Codex Dot Tasks** on the Remote page to see Dot Durable tasks. It is off by default because checking them uses more power; after an upgrade it stays on if Dot tasks already reported progress on this computer. Pacer labels Dot tasks assigned to this computer with `Dot`, even when their chats are closed. On Windows this works with the Microsoft Store version of Codex Desktop and its default profile. The Codex **Progress Ring** switch sets up percentage reporting. Restart Codex Desktop after turning the ring on so Dot tasks pick it up. Turning the ring off stops new reports right away. Pacer still shows whether the task is running or has finished.
 
+## Local background jobs
+
+With a build that includes job tracking, a local agent can register a batch job. Open the island to see processed and failed counts, including after the chat closes. Add this MCP server once for Codex, then start a new chat.
+
+macOS
+
+```sh
+codex mcp add pacer_tasks -- "/Applications/Codex Pacer.app/Contents/MacOS/CodexPacerIsland" --tracked-tasks-mcp
+```
+
+Windows PowerShell
+
+```powershell
+codex mcp add pacer_tasks -- "$env:LOCALAPPDATA\Programs\Codex Pacer\Engine\PacerEngine.exe" --tracked-tasks-mcp
+```
+
+Ask the agent to register the batch with track_task and have the worker publish its counts after each batch and its final state at exit. Use untrack_task with the run ID to remove the entry. The worker continues independently. [Worker JSON format](development.md#local-tracked-jobs)
+
 ## Quota and balance
 
 **Codex and Claude.** Each service has one ring: the upper arc is the 5-hour quota and the lower arc the weekly quota, each with its percentage left and a reset countdown. A white tick marks how much of the time is left: if the arc reaches past the tick, you're ahead of an even pace. Values turn amber when they run low or fast. With only one service on, Pacer also shows its pace and a forecast for the reset.

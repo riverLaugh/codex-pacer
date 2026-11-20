@@ -8,6 +8,12 @@ public struct TaskProgressReporter {
     package static let localHarnessArgument = "--task-progress-mcp"
     private static let limit = 1024 * 1024
     private static let instructions = ProgressPrompt.toolDescription
+    private var trackedTasks: TrackedTaskStore?
+    package init(trackedTasks: TrackedTaskStore) {
+        self.init(localHarnessFlag: nil)
+        self.trackedTasks = trackedTasks
+    }
+
     private let flag: URL?
     private let capturesDurableReceipts: Bool
     private var pending = Data()
@@ -89,8 +95,8 @@ public struct TaskProgressReporter {
             let supported = ["2024-11-05", "2025-03-26", "2025-06-18", "2025-11-25"]
             var result: [String: Any] = ["protocolVersion": supported.contains(protocolVersion) ? protocolVersion : "2025-06-18",
                 "capabilities": ["tools": [String: String]()],
-                "serverInfo": ["name": CodexProgressEvidence.server, "version": "2.0.0"]]
-            if enabled { result["instructions"] = Self.instructions }
+                "serverInfo": ["name": trackedTasks == nil ? CodexProgressEvidence.server : TrackedTaskCommand.server, "version": "2.0.0"]]
+            if enabled { result["instructions"] = trackedTasks == nil ? Self.instructions : TrackedTaskCommand.instructions }
             reply["result"] = result
         case "ping": reply["result"] = [String: String]()
         case "tools/list":
@@ -98,8 +104,12 @@ public struct TaskProgressReporter {
                 "inputSchema": ["type": "object", "properties": ["percent": ["type": "integer", "minimum": 0, "maximum": 100]],
                                 "required": ["percent"], "additionalProperties": false],
                 "annotations": ["readOnlyHint": true, "openWorldHint": false]]
-            reply["result"] = ["tools": enabled ? [tool] : []]
+            reply["result"] = ["tools": trackedTasks != nil ? TrackedTaskCommand.definitions : (enabled ? [tool] : [])]
         case "tools/call":
+            if let trackedTasks {
+                reply["result"] = TrackedTaskCommand.call(params, store: trackedTasks)
+                break
+            }
             let active = enabled
             let percent = CodexProgressEvidence.percent(params["arguments"] as? [String: Any])
             let valid = active && params["name"] as? String == CodexProgressEvidence.tool && percent != nil

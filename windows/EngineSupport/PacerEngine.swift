@@ -6,6 +6,8 @@ import CWindowsSupport
 
 public enum PacerEngine {
     public static func run() async {
+        if TrackedTaskCommand.serveIfRequested(arguments: CommandLine.arguments, directory: WindowsFileSystem.trackedTaskDirectory,
+            files: WindowsFileSystem(), read: EngineInput.read) { return }
         if TaskProgressReporter.serveLocalHarnessIfRequested(arguments: CommandLine.arguments, read: EngineInput.read) { return }
         #if os(Windows)
         // First, so a failure anywhere below leaves a report.
@@ -129,7 +131,8 @@ public enum PacerEngine {
             codexRemoteProgressServices: demo || readOnly ? nil : .codexProgress(ssh: ssh, wsl: wsl),
             allowsLiveClaudeWeb: !demo && !readOnly, claudeWebReference: claudeReference, claudeHookServices: hookServices,
             managesCodexProgress: !demo && !readOnly, managesDeepSeekProgress: !demo && !readOnly, managesLocalHarnessProgress: !demo && !readOnly,
-            codexProgressPaths: .init(root: progressRoot), allowsStorageRecovery: !readOnly)
+            codexProgressPaths: .init(root: progressRoot), allowsStorageRecovery: !readOnly,
+            trackedStore: demo || readOnly ? nil : .init(directory: WindowsFileSystem.trackedTaskDirectory, files: WindowsFileSystem()))
         await runtime.hello()
         let input = EngineInput()
         var framer = EngineFramer()
@@ -509,6 +512,19 @@ actor EngineRuntime {
     }
     #endif
     private let output: @Sendable (Data) -> Void
+    private let trackedStore: TrackedTaskStore?
+    private var trackedRows: [TrackedTaskStore.Row] = []
+    private var readingTrackedRows = false
+    @discardableResult private func refreshTrackedRows() async -> Bool {
+        guard let trackedStore, !readingTrackedRows else { return false }
+        readingTrackedRows = true
+        let date = now()
+        let rows = await Task.detached(priority: .utility) { trackedStore.rows(at: date) }.value
+        readingTrackedRows = false
+        guard rows != trackedRows else { return false }
+        trackedRows = rows
+        return true
+    }
     private let allowsStorageRecovery: Bool
 
     init(demo: Bool, now: @escaping @Sendable () -> Date = { Date() },
@@ -535,6 +551,7 @@ actor EngineRuntime {
          managesLocalHarnessProgress: Bool = false,
          codexProgressPaths: WindowsCodexProgressPaths = .init(root: WindowsCodexProgressPaths.defaultRoot),
          allowsStorageRecovery: Bool = true,
+         trackedStore: TrackedTaskStore? = nil,
          sourceSettings: CodexSourceSettingsServices = .live,
          localHarnessDefinitions: [LocalHarnessDefinition] = HarnessRegistry.localHarnesses,
          installationDetection: @escaping @Sendable () async -> ProviderInstallationDetection = {
@@ -542,6 +559,7 @@ actor EngineRuntime {
          },
          output: @escaping @Sendable (Data) -> Void = { try? FileHandle.standardOutput.write(contentsOf: $0) }) {
         self.demo = demo; self.now = now; self.output = output; self.quotaServices = quotaServices; self.desktopServices = desktopServices
+        self.trackedStore = trackedStore
         self.allowsStorageRecovery = allowsStorageRecovery
         self.sourceSettings = sourceSettings
         self.localHarnessDefinitions = localHarnessDefinitions
@@ -1071,6 +1089,7 @@ actor EngineRuntime {
         case "setExpanded":
             guard let value = command.params?.expanded else { failure(id: command.id, code: "invalidCommand"); return true }
             expanded = value
+            if value { await refreshTrackedRows() }
             if !demo {
                 for provider in supportedProviders where provider == .codex || enabled.contains(provider) {
                     let policy: ActivityRefreshPolicy = value ? .expanded : .collapsed
@@ -1928,7 +1947,9 @@ actor EngineRuntime {
         guard projectionReady else { return }
         // Only the metadata projection changes on a clock tick. Do not reopen
         // transcript files or rescan source directories while nothing is written.
-        guard activities.contains(where: { [.running, .waitingForInput].contains($0.phase) }) || !quota.isEmpty || codexQuota != nil || claudeQuotaState?.snapshot != nil || enabled.contains(.deepseek) && walletSource != nil else { return }
+        let trackedChanged = await refreshTrackedRows()
+        guard active, !Task.isCancelled else { return }
+        guard trackedChanged || !trackedRows.isEmpty || activities.contains(where: { [.running, .waitingForInput].contains($0.phase) }) || !quota.isEmpty || codexQuota != nil || claudeQuotaState?.snapshot != nil || enabled.contains(.deepseek) && walletSource != nil else { return }
         if refreshTask == nil { publish(notices: []) } else { handOffToCollect(localSnapshot: false) }
     }
 
@@ -2931,6 +2952,7 @@ actor EngineRuntime {
             },
             claudeRemoteSetups: claudeRemoteSetups, connections: connectionPresentation(), codexProgressSetup: codexProgressSetup,
             deepseekProgressSetup: deepseekProgressSetup)
+        snapshot.trackedTasks = trackedRows.isEmpty ? nil : trackedRows.map { .init($0, hideProjects: hideProjects, at: date) }
         snapshot.expandedPanel = EngineExpandedPanel(settings: panelSettings, enabled: enabled, snapshots: snapshots,
             hasBudget: hasBudget, at: date)
         snapshot.wslAvailability = demo ? .available : wslAvailability

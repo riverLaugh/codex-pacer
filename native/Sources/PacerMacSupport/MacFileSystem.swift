@@ -3,6 +3,10 @@ import Foundation
 import PacerCore
 
 public struct MacFileSystem: PlatformFileSystem {
+    package static var trackedTaskDirectory: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("CodexPacerIsland/TrackedTasks", isDirectory: true)
+    }
     public init() {}
     public func metadata(_ url: URL, followingSymbolicLinks: Bool) -> PlatformFileMetadata? {
         var info = stat()

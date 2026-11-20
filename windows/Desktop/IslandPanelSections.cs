@@ -147,12 +147,46 @@ public partial class IslandWindow
         drawnFrom[element] = signature; return true;
     }
 
+    private IReadOnlyList<TrackedTask> shownWorkers = [];
+    private bool RenderTrackedWorkers(EngineSnapshot snapshot)
+    {
+        IReadOnlyList<TrackedTask> workers = snapshot.TrackedTasks ?? [];
+        TaskPages.Visibility = rows.Count == 0 && workers.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
+        if (shownWorkers.SequenceEqual(workers)) return false;
+        shownWorkers = workers;
+        TrackedWorkers.Children.Clear();
+        foreach (var worker in workers)
+        {
+            var line = new StackPanel { Margin = new Thickness(0, 4, 0, 2) };
+            var title = new TextBlock { Text = worker.Title, FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis };
+            title.SetResourceReference(TextBlock.ForegroundProperty, "Island.Primary");
+            var detail = new TextBlock { Text = worker.Detail, FontSize = 11, TextWrapping = TextWrapping.Wrap };
+            detail.SetResourceReference(TextBlock.ForegroundProperty, "Island.Secondary");
+            line.Children.Add(title);
+            line.Children.Add(detail);
+            if (worker.ThreadID is Guid thread && desktopApplications is { } applications)
+            {
+                var button = new Button { Content = line, Style = (Style)FindResource("QuotaLinkButton"),
+                    HorizontalContentAlignment = HorizontalAlignment.Left, ToolTip = ui.Text("tracked.open") };
+                button.Click += async (_, _) =>
+                {
+                    var plan = new EngineNavigationPlan(worker.Id.ToString(), "codex", "application",
+                        "codex://threads/" + thread.ToString("D"), null, null, null);
+                    if (!await applications.OpenConversationAsync(plan)) SetStatus(ui.Text("activity.open_failed"));
+                };
+                TrackedWorkers.Children.Add(button);
+            }
+            else TrackedWorkers.Children.Add(line);
+        }
+        return true;
+    }
+
     /// Fills every section and, only when the shape changed, rebuilds their order.
     /// Returns whether anything the panel measures may have changed.
     private bool RenderPanel(EngineSnapshot snapshot)
     {
         PanelBuilds++;
-        bool changed = false;
+        bool changed = RenderTrackedWorkers(snapshot);
         var headings = new List<string>();
         var current = panel ?? DefaultPanel(snapshot);
         var placed = new List<(PanelSection Section, FrameworkElement Element, StackPanel Trailing, FrameworkElement Header)>();

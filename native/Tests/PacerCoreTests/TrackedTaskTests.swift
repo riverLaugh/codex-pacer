@@ -60,6 +60,17 @@ final class TrackedTaskTests: XCTestCase {
         try write()
         XCTAssertEqual(store.rows(at: Date()).first?.reading?.status.succeeded, 998)
     }
+    func testOriginAndHiddenTitleAreIndependentOfSessionLifetime() throws {
+        let thread = UUID()
+        try store.register(id: id, title: "PDF batch", path: file.path, threadID: thread)
+        let row = try XCTUnwrap(store.rows(at: Date()).first)
+        let normal = TrackedTaskStore.Presentation(row, hideProjects: false, at: Date())
+        let hidden = TrackedTaskStore.Presentation(row, hideProjects: true, at: Date())
+        XCTAssertEqual(normal.title, "PDF batch")
+        XCTAssertNotEqual(hidden.title, normal.title)
+        XCTAssertEqual(hidden.threadID, thread)
+    }
+
     func testTerminalOutcomesAndUntrackPreserveWorkerFile() throws {
         for (state, ok, failed, total) in [("completed", 0, 0, 0), ("completed", 1, 0, 1), ("failed", 1, 2, 10)] {
             let run = UUID()

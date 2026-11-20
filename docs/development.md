@@ -571,3 +571,17 @@ python3 scripts/performance/benchmark-events.py \
 Use the intended baseline ref instead of `HEAD` for committed changes. Results measure component CPU cost, not whole-app speed, memory, energy or SSH IO. Keep raw results under ignored `output/`, and profile the packaged app for UI measurements.
 
 Live UI measurements need a verified candidate PID, an unlocked screen and fresh main-panel checks at the interval boundaries; a window with unknown lock timing or possibly stale frames is UI-unconfirmed and excluded. Record task and source changes during the run, since an active run is not idle. Per-process CPU and energy counters cover only the captured processes, not WindowServer, the GPU, remote helpers or whole-system power.
+
+## Local tracked jobs
+
+The optional local stdio MCP (`--tracked-tasks-mcp`) exposes `track_task` and `untrack_task`. The Mac app and Windows engine share its protocol and reader. The agent generates one UUID per execution and registers its title and absolute JSON path. Only matching Codex thread identifiers in the MCP envelope enable a conversation link. Registration works before the worker creates the file. Both commands are idempotent for the same operation.
+
+A worker replaces a UTF-8 status file atomically in the same directory, using a temporary file and rename. Example:
+
+```json
+{"run_id":"16551ce1-f8aa-427f-8d97-a6e84bea9499","state":"running","succeeded":340,"failed":2,"total":1000}
+```
+
+The parser accepts a regular file of up to 16 KiB and counts up to 2,147,483,647. Processed is succeeded plus failed. A completed run must account for every item. A failed run may stop early. Reaching the total still requires an explicit terminal state. File modification time supplies freshness. A missing file, malformed JSON, mismatched UUID or invalid counts keeps the last usable reading. Terminal readings stay fixed until the user forgets the run.
+
+Registrations and counter checkpoints are local to the current user under Pacer’s application data folder in `TrackedTasks`. The worker owns its file. Forgetting a UUID removes only its registration and checkpoint. The read-only-facing snapshot command omits titles, thread identifiers and paths (like the UI reader, it checkpoints valid observations). Run the cross-process smoke check with `python3 scripts/diagnostics/test-tracked-tasks.py <app-or-engine-executable>`; it uses its own temporary registry.

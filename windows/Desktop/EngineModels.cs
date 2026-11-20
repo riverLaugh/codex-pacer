@@ -17,7 +17,8 @@ internal sealed record EngineSnapshot(
     IReadOnlyList<ClaudeRemoteSetup>? ClaudeRemoteSetups = null, ConnectionPage? Connections = null, string? CodexProgressSetup = null,
     string? DeepSeekProgressSetup = null, EngineExpandedPanel? ExpandedPanel = null,
     string? WslAvailability = null, RemoteControlDirectory? RemoteControlDirectory = null,
-    IReadOnlyList<EngineAccountCredits>? AccountCredits = null);
+    IReadOnlyList<EngineAccountCredits>? AccountCredits = null, IReadOnlyList<TrackedTask>? TrackedTasks = null);
+internal sealed record TrackedTask(Guid Id, string Title, string Detail, Guid? ThreadID);
 /// A module's account credits as the engine knows them, with what the bill
 /// service reported; drawn the same way in Settings, Overview and the island.
 internal sealed record EngineAccountCredits(string Provider, HarnessAccountCredits Credits, bool Stale,

@@ -1607,3 +1607,12 @@
 "whats_new.return_top_center_detail" = "常拖动灵动岛的话，可以在展开面板的标题栏加一个按钮，一键放回顶部居中。";
 "whats_new.claude_app_access" = "Claude 请求使用应用时提醒你";
 "whats_new.claude_app_access_detail" = "Claude Desktop 请求使用电脑上的应用时，Pacer 会提示这个任务在等你。";
+
+"tracked.pending" = "等待首次更新";
+"tracked.running" = "运行中";
+"tracked.completed" = "已完成";
+"tracked.failed" = "任务失败";
+"tracked.failures" = "失败 %d";
+"tracked.unavailable" = "状态文件暂不可用";
+"tracked.age" = "%d 分钟前更新";
+"tracked.open" = "打开发起任务的会话";

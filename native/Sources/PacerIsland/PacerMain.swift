@@ -11,11 +11,14 @@ private let showExistingIsland = Notification.Name("com.codexpacer.island.showEx
 enum PacerMain {
     @MainActor static func main() {
         let arguments = CommandLine.arguments
-        if TaskProgressReporter.serveLocalHarnessIfRequested(arguments: arguments, read: {
+        func readInput() -> Data? {
             var buffer = [UInt8](repeating: 0, count: 4096)
             let count = Darwin.read(STDIN_FILENO, &buffer, buffer.count)
             return count > 0 ? Data(buffer.prefix(count)) : nil
-        }) { return }
+        }
+        if TrackedTaskCommand.serveIfRequested(arguments: arguments, directory: MacFileSystem.trackedTaskDirectory,
+            files: MacFileSystem(), read: readInput) { return }
+        if TaskProgressReporter.serveLocalHarnessIfRequested(arguments: arguments, read: readInput) { return }
         let durableReporter = arguments.count == 4 && arguments[3] == CodexProgressReporter.durableArgument
         if arguments.count == 3 || durableReporter, arguments[1] == CodexProgressReporter.argument {
             let home = URL(fileURLWithPath: arguments[2], isDirectory: true)
